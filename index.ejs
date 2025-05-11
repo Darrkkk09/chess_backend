@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    .chessboard {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      grid-template-rows: repeat(8, minmax(0, 1fr));
+      width: 480px;
+      height: 480px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .square {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      border: 1px solid #1e293b;
+      transition: background-color 0.3s ease;
+    }
+
+    .square.light {
+      background-color: #597da5;
+    }
+
+    .square.dark {
+      background-color: #1e3a8a;
+    }
+
+    .piece {
+      font-size: 38px;
+      cursor: grab;
+      transition: transform 0.2s ease;
+    }
+
+    .piece.white {
+      color: #ffffff;
+      text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
+    }
+
+    .piece.black {
+      color: #000000;
+      text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .dragging {
+      opacity: 0.5;
+    }
+
+    .flipped {
+      transform: rotate(180deg);
+    }
+
+    .flipped .piece {
+      transform: rotate(180deg);
+    }
+  </style>
+</head>
+<body class="bg-gray-900 h-screen flex flex-col items-center justify-center">
+  <div class="chessboard bg-gray-800 border border-gray-700"></div>
+  <button id="resetButton" class="mt-4 px-4 py-2 bg-red-500 text-white rounded">Reset Game</button>
+
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script src="/javascripts/chessgame.js"></script>
+  <script>
+    const resetButton = document.getElementById('resetButton');
+    resetButton.addEventListener('click', () => {
+      socket.emit('resetGame');
+    });
+  </script>
+</body>
+</html>
