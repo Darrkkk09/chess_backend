@@ -1,27 +1,23 @@
 const express = require('express');
 const http = require('http');
-const {Chess} = require('chess.js');
-const  path = require('path');
+const { Chess } = require('chess.js');
+const path = require('path');
 const socket = require('socket.io');
-
 
 const app = express();
 const server = http.createServer(app);
 const io = socket(server);
 const chess = new Chess();
 let players = {};
-let currentPlayer = 'W';
 
-app.set('view engine','ejs');
-app.use(express.static(path.join(__dirname,'public')));
+app.set('view engine', 'ejs');
+app.use(express.static(path.join(__dirname, 'public')));
 
-
-app.get('/',(req,res)=>{
-    res.render("index" , {title : "Dark Moves"});
+app.get('/', (req, res) => {
+    res.render("index", { title: "Dark Moves" });
 });
 
-
-io.on('connection', uniqueSocket => {
+io.on('connection', (uniqueSocket) => {
     console.log("Player connected:", uniqueSocket.id);
 
     if (!players.white) {
@@ -31,16 +27,16 @@ io.on('connection', uniqueSocket => {
         players.black = uniqueSocket.id;
         uniqueSocket.emit("playerRole", 'b');
     } else {
-        uniqueSocket.emit("spectatorRole-");
+        uniqueSocket.emit("spectatorRole");
     }
 
-    uniqueSocket.on("move", move => {
+    uniqueSocket.on("move", (move) => {
         try {
-            const turn = chess.turn(); 
+            const turn = chess.turn();
 
             if ((turn === 'w' && uniqueSocket.id !== players.white) ||
                 (turn === 'b' && uniqueSocket.id !== players.black)) {
-                return; 
+                return;
             }
 
             const result = chess.move(move);
@@ -50,12 +46,23 @@ io.on('connection', uniqueSocket => {
                 return;
             }
 
-            currentPlayer = chess.turn(); 
             io.emit("move", move);
-            io.emit("boardState", chess.fen()); 
+            io.emit("boardState", chess.fen());
+
+            if (chess.in_checkmate()) {
+                const winner = turn === 'w' ? 'Black' : 'White';
+                io.emit("gameOver", { winner });
+            } else if (chess.in_draw()) {
+                io.emit("gameOver", { winner: "Draw" });
+            }
         } catch (err) {
             console.error("Move error:", err);
         }
+    });
+
+    uniqueSocket.on("resetGame", () => {
+        chess.reset();
+        io.emit("resetBoard");
     });
 
     uniqueSocket.on("disconnect", () => {
@@ -68,8 +75,6 @@ io.on('connection', uniqueSocket => {
     });
 });
 
-
-
-server.listen(3000,() => {
+server.listen(3000, () => {
     console.log("Server is running on port 3000");
 });
